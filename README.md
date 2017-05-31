@@ -30,6 +30,7 @@
 - Update the display_stats function so that it shows the name of the current level.
 - Add a victory sound that plays when the game is won. This should play instead of the normal end-of-level sound.
 - If you kill enemies (in the 'Hard' section), award different point values based on the type of enemy killed.
+- If you made an invincibility powerup (in the 'Hard' section), make the player kill enemies collided with while invincible, but do not let the temporary invincibility acquired after colliding with an enemy kill enemies. (This means you can't use the same invincibility attribute for each situation.)
 
 ### Medium
 
