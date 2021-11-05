@@ -4,6 +4,8 @@ import json
 import pygame
 import sys
 
+from pygame.mouse import get_pos
+
 pygame.mixer.pre_init()
 pygame.init()
 
@@ -15,7 +17,7 @@ FPS = 60
 GRID_SIZE = 64
 
 # Options
-sound_on = True
+sound_on = False
 
 # Controls
 LEFT = pygame.K_LEFT
@@ -29,6 +31,7 @@ levels = [#"levels/opening.json",
         #   "levels/world-3.json",
           "levels/world-4.json"]
 
+# = []inv 
 # Colors
 TRANSPARENT = (0, 0, 0, 0)
 DARK_BLUE = (16, 86, 103)
@@ -73,6 +76,7 @@ block_images = {"RD": load_image("assets/tiles/road2.png"),
                 }
 
 pig_img = load_image("assets/items/piggy-1.png")
+cow_img = load_image("assets/items/cowr.png")
 heart_img = load_image("assets/items/bandaid.png")
 oneup_img = load_image("assets/items/first_aid.png")
 flag_img = load_image("assets/items/flag.png")
@@ -97,10 +101,12 @@ GAMEOVER_SOUND = pygame.mixer.Sound("assets/sounds/game_over.wav")
 
 class Entity(pygame.sprite.Sprite):
 
+#BE CAREFUL WITH NAME BECAUSE OF ENEMIES
     def __init__(self, x, y, image):
         super().__init__()
 
         self.image = image
+        # self.name = name
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -112,6 +118,12 @@ class Entity(pygame.sprite.Sprite):
         self.vy += level.gravity
         self.vy = min(self.vy, level.terminal_velocity)
 
+#GETTER AND SETTER 
+    def setName():
+        pass
+    def getName():
+        pass
+
 class Block(Entity):
 
     def __init__(self, x, y, image):
@@ -122,6 +134,7 @@ class Character(Entity):
     def __init__(self, images):
         super().__init__(0, 0, images['idle'])
 
+      
         self.image_idle_right = images['idle']
         self.image_idle_left = pygame.transform.flip(self.image_idle_right, 1, 0)
         self.images_run_right = images['run']
@@ -145,7 +158,7 @@ class Character(Entity):
         self.on_ground = True
 
         self.score = 0
-        self.lives = 3
+        # self.lives = 3
 
         #Eliminate hearts concept
         self.hearts = 3
@@ -211,13 +224,19 @@ class Character(Entity):
                 self.rect.top = block.rect.bottom
                 self.vy = 0
 
-# Make more flexible for more animals
-    def inventory(self, animals):
-        hit_list = pygame.sprite.spritecollide(self, animals, True)
+# Make more flexible for more temp
 
-        for animals in hit_list:
-            play_sound(COIN_SOUND) #change sound dependent on animal
-            self.score += animals.value
+    def inventory(self, temp):
+        hit_list = pygame.sprite.spritecollide(self, temp, True)
+        # inv.append(temp)
+
+        for temp in hit_list:
+             #change sound dependent on animal
+            self.score += temp.value
+            self.test = pygame.sprite.Group()
+            self.test.add(temp)
+            # print(temp.value)
+            # print(self.test)
 
     def process_enemies(self, enemies):
         hit_list = pygame.sprite.spritecollide(self, enemies, False)
@@ -273,9 +292,9 @@ class Character(Entity):
                 self.image = self.image_jump_left
 
     def die(self):
-        self.lives -= 1
+        # self.hearts -= 1
 
-        if self.lives > 0:
+        if self.hearts > 0:
             play_sound(DIE_SOUND)
         else:
             play_sound(GAMEOVER_SOUND)
@@ -295,7 +314,7 @@ class Character(Entity):
         self.set_image()
 
         if self.hearts > 0:
-            self.inventory(level.animals)
+            self.inventory(level.temp)
             self.process_powerups(level.powerups)
             self.check_flag(level)
 
@@ -309,6 +328,7 @@ class Animals(Entity):
         super().__init__(x, y, image)
 
         self.value = 1
+            
 
 class Enemy(Entity):
     def __init__(self, x, y, images):
@@ -452,8 +472,8 @@ class OneUp(Entity):
     def __init__(self, x, y, image):
         super().__init__(x, y, image)
 
-    def apply(self, character):
-        character.lives += 1
+    # def apply(self, character):
+    #     character.lives += 1
 
 class Heart(Entity):
     def __init__(self, x, y, image):
@@ -472,13 +492,13 @@ class Level():
     def __init__(self, file_path):
         self.starting_blocks = []
         self.starting_enemies = []
-        self.starting_animals = []
+        self.starting_temp = []
         self.starting_powerups = []
         self.starting_flag = []
 
         self.blocks = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group()
-        self.animals = pygame.sprite.Group()
+        self.temp = pygame.sprite.Group()
         self.powerups = pygame.sprite.Group()
         self.flag = pygame.sprite.Group()
 
@@ -513,10 +533,14 @@ class Level():
             x, y = item[0] * GRID_SIZE, item[1] * GRID_SIZE
             self.starting_enemies.append(Monster(x, y, monster_images))
 
-#add more animals
-        for item in map_data['inventory']:
+#Checks the json file and adds elements to map
+        for item in map_data['pig']:
             x, y = item[0] * GRID_SIZE, item[1] * GRID_SIZE
-            self.starting_animals.append(Animals(x, y, pig_img))
+            self.starting_temp.append(Animals(x, y, pig_img))
+            
+        for item in map_data['cow']:
+            x, y = item[0] * GRID_SIZE, item[1] * GRID_SIZE
+            self.starting_temp.append(Animals(x, y, cow_img)) 
 
         for item in map_data['oneups']:
             x, y = item[0] * GRID_SIZE, item[1] * GRID_SIZE
@@ -591,11 +615,11 @@ class Level():
 
         self.blocks.add(self.starting_blocks)
         self.enemies.add(self.starting_enemies)
-        self.animals.add(self.starting_animals)
+        self.temp.add(self.starting_temp)
         self.powerups.add(self.starting_powerups)
         self.flag.add(self.starting_flag)
 
-        self.active_sprites.add(self.animals, self.enemies, self.powerups)
+        self.active_sprites.add(self.temp, self.enemies, self.powerups)
         self.inactive_sprites.add(self.blocks, self.flag)
 
         # with this speed up blitting on slower computers?
@@ -615,10 +639,10 @@ class Level():
 
     def reset(self):
         self.enemies.add(self.starting_enemies)
-        self.animals.add(self.starting_animals)
+        self.temp.add(self.starting_temp)
         self.powerups.add(self.starting_powerups)
 
-        self.active_sprites.add(self.animals, self.enemies, self.powerups)
+        self.active_sprites.add(self.temp, self.enemies, self.powerups)
 
         for e in self.enemies:
             e.reset()
@@ -638,8 +662,8 @@ class Game():
         self.window = pygame.display.set_mode([WIDTH, HEIGHT])
         pygame.display.set_caption(TITLE)
         self.clock = pygame.time.Clock()
-        self.done = False
-
+        self.done = False 
+       
         self.reset()
 
     def start(self):
@@ -659,9 +683,16 @@ class Game():
         self.stage = Game.SPLASH
 
 #remove splash screen and replace with opening screen
+#understand sizing
+# pos y = down, neg y = up, pos x = left, neg x = right
     def display_splash(self, surface):
+    #  for event in pygame.event.get():
+
         line1 = FONT_GD.render(TITLE, 1, WHITE)
-        line2 = FONT_SM.render("Press any key to start.", 1, WHITE)
+        line2 = FONT_SM.render("Press any key to start.", 1, WHITE) #remove
+        line3 = FONT_SM.render("Play Game", 1, WHITE)
+        line4 = FONT_SM.render("Instructions", 1, WHITE)
+        line5 = FONT_SM.render("Credits", 1, WHITE)
 
         x1 = WIDTH / 2 - line1.get_width() / 2;
         y1 = HEIGHT / 3 - line1.get_height() / 2;
@@ -669,10 +700,20 @@ class Game():
         x2 = WIDTH / 2 - line2.get_width() / 2;
         y2 = y1 + line1.get_height() + 16;
 
-        surface.blit(line1, (x1, y1))
-        surface.blit(line2, (x2, y2))
+        self.titled = surface.blit(line1, ((x1 ), y1 - 125))
+        self.pg = surface.blit(line3, (x2 + 70, y2 - 50)) #ORIENTATION
+        self.instruct = surface.blit(line4, (x2 + 70, y2 - 0))
+        self.cred = surface.blit(line5, (x2 + 70, y2 + 50))
+        
+        self.pos = pygame.mouse.get_pos()
 
+
+
+        
+
+#primary_text --> possible clean up
     def display_message(self, surface, primary_text, secondary_text):
+
         line1 = FONT_MD.render(primary_text, 1, WHITE)
         line2 = FONT_SM.render(secondary_text, 1, WHITE)
 
@@ -682,31 +723,48 @@ class Game():
         x2 = WIDTH / 2 - line2.get_width() / 2;
         y2 = y1 + line1.get_height() + 16;
 
+
         surface.blit(line1, (x1, y1))
         surface.blit(line2, (x2, y2))
 
     def display_stats(self, surface):
         hearts_text = FONT_SM.render("Hearts: " + str(self.hero.hearts), 1, WHITE)
-        lives_text = FONT_SM.render("Lives: " + str(self.hero.lives), 1, WHITE)
+        # lives_text = FONT_SM.render("Lives: " + str(self.hero.lives), 1, WHITE)
         inventory_text = FONT_SM.render("Animals: " + str(self.hero.score), 1, WHITE)
 
         surface.blit(inventory_text, (WIDTH - inventory_text.get_width() - 32, 32))
         surface.blit(hearts_text, (32, 32))
-        surface.blit(lives_text, (32, 64))
+        # surface.blit(lives_text, (32, 64))
 
     def process_events(self):
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.done = True
+                
+            elif event.type == pygame.MOUSEBUTTONDOWN and self.stage == Game.SPLASH:
+
+                if self.pg.collidepoint(self.pos) and self.stage == Game.SPLASH:
+                    print("play game")
+                    self.stage = Game.PLAYING
+                elif self.instruct.collidepoint(self.pos):
+                    print("instructions")
+                    #WORK ON INSTRUCTIONS SCREEN
+                elif self.cred.collidepoint(self.pos):
+                    print("credits")
+
+
 
             elif event.type == pygame.KEYDOWN:
-                if self.stage == Game.SPLASH or self.stage == Game.START:
+                #"or self.stage == Game.START" unecessary code?
+                if self.stage == Game.SPLASH and event.key == pygame.K_s: 
                     self.stage = Game.PLAYING
                     play_music()
-#back
+# HERE
                 elif self.stage == Game.PLAYING:
-                    if event.key == JUMP:
-                        self.hero.jump(self.level.blocks)
+                     if event.key == JUMP:
+                         self.hero.jump(self.level.blocks)
+                     
 
                 elif self.stage == Game.PAUSED:
                     pass
@@ -745,13 +803,15 @@ class Game():
                 self.stage = Game.VICTORY
             pygame.mixer.music.stop()
 
-        elif self.hero.lives == 0:
-            self.stage = Game.GAME_OVER
-            pygame.mixer.music.stop()
+        # elif self.hero.lives == 0:
+        #     self.stage = Game.GAME_OVER
+        #     pygame.mixer.music.stop()
 
         elif self.hero.hearts == 0:
             self.level.reset()
             self.hero.respawn(self.level)
+            self.stage = Game.GAME_OVER
+            pygame.mixer.music.stop()
 
     def calculate_offset(self):
         x = -1 * self.hero.rect.centerx + WIDTH / 2
@@ -782,11 +842,11 @@ class Game():
         if self.stage == Game.SPLASH:
             self.display_splash(self.window)
         elif self.stage == Game.START:
-            self.display_message(self.window, "Ready?!!!", "Press any key to start.")
+           pass #self.display_message(self.window, "Ready?!!!", "Press any key to start.")
         elif self.stage == Game.PAUSED:
             pass
         elif self.stage == Game.LEVEL_COMPLETED:
-            self.display_message(self.window, "Level Complete", "Press any key to continue.")
+            pass#self.display_message(self.window, "Level Complete", "Press any key to continue.")
         elif self.stage == Game.VICTORY:
             self.display_message(self.window, "You Win!", "Press 'R' to restart.")
         elif self.stage == Game.GAME_OVER:
