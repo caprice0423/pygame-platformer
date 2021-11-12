@@ -3,6 +3,7 @@
 import json
 import pygame
 import sys
+from pygame.constants import K_p
 
 from pygame.mouse import get_pos
 
@@ -21,15 +22,18 @@ sound_on = False
 
 # Controls
 LEFT = pygame.K_LEFT
+LEFT2 = pygame.K_a
 RIGHT = pygame.K_RIGHT
+RIGHT2 = pygame.K_d
 JUMP = pygame.K_UP
+JUMP2 = pygame.K_w
+
 DOWN = pygame.K_DOWN
 
 # Levels
-levels = [#"levels/opening.json",
-        #   "levels/world-2.json",
-        #   "levels/world-3.json",
-          "levels/world-4.json"]
+levels = ["levels/world-4.json"]
+intro =  ["levels/opening.json",
+          "levels/credits.json"]
 
 # = []inv 
 # Colors
@@ -118,11 +122,6 @@ class Entity(pygame.sprite.Sprite):
         self.vy += level.gravity
         self.vy = min(self.vy, level.terminal_velocity)
 
-#GETTER AND SETTER 
-    def setName():
-        pass
-    def getName():
-        pass
 
 class Block(Entity):
 
@@ -495,7 +494,7 @@ class Level():
         self.starting_temp = []
         self.starting_powerups = []
         self.starting_flag = []
-
+        
         self.blocks = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group()
         self.temp = pygame.sprite.Group()
@@ -515,7 +514,6 @@ class Level():
 
         self.width = map_data['width'] * GRID_SIZE
         self.height = map_data['height'] * GRID_SIZE
-        
 
         self.start_x = map_data['start'][0] * GRID_SIZE
         self.start_y = map_data['start'][1] * GRID_SIZE
@@ -572,9 +570,9 @@ class Level():
             background_img = pygame.image.load(map_data['background-img']).convert_alpha()
 
             if map_data['background-fill-y']:
-                h = background_img.get_height()
-                w = int(background_img.get_width() * HEIGHT / h)
-                background_img = pygame.transform.scale(background_img, (w, HEIGHT))
+                 h = background_img.get_height()
+                 w = int(background_img.get_width() * HEIGHT / h)
+                 background_img = pygame.transform.scale(background_img, (w, HEIGHT))
 
             if "top" in map_data['background-position']:
                 start_y = 0
@@ -653,10 +651,16 @@ class Game():
     SPLASH = 0
     START = 1
     PLAYING = 2
+
     PAUSED = 3
+
     LEVEL_COMPLETED = 4
     GAME_OVER = 5
     VICTORY = 6
+
+    INSTRUCTIONS = 7
+    CREDITS = 8
+  
 
     def __init__(self):
         self.window = pygame.display.set_mode([WIDTH, HEIGHT])
@@ -671,6 +675,9 @@ class Game():
         self.level.reset()
         self.hero.respawn(self.level)
 
+    # def test(self):
+    #      self.current_level =
+
     def advance(self):
         self.current_level += 1
         self.start()
@@ -682,9 +689,9 @@ class Game():
         self.start()
         self.stage = Game.SPLASH
 
-#remove splash screen and replace with opening screen
-#understand sizing
-# pos y = down, neg y = up, pos x = left, neg x = right
+
+# understand sizing
+# pos y = down, neg y = up, neg x = left, pos x = right
     def display_splash(self, surface):
     #  for event in pygame.event.get():
 
@@ -704,11 +711,66 @@ class Game():
         self.pg = surface.blit(line3, (x2 + 70, y2 - 50)) #ORIENTATION
         self.instruct = surface.blit(line4, (x2 + 70, y2 - 0))
         self.cred = surface.blit(line5, (x2 + 70, y2 + 50))
-        
+       
+
         self.pos = pygame.mouse.get_pos()
+        
+        
+        
+    def display_instructions(self, surface):
+
+         line = FONT_SM.render("Instructions", 1, WHITE)
+         Line3 = FONT_SM.render("<INPUT INSTRUCTIONS>", 1, WHITE)
+
+         
+         line2 = FONT_SM.render("back", 1, WHITE)
+
+         x1 = WIDTH / 2 - line.get_width() / 2;
+         y1 = HEIGHT / 3 - line.get_height() / 2;
+
+         x2 = WIDTH / 2 - line.get_width() / 2;
+         y2 = y1 + line.get_height() + 16;
+
+         self.instruct = surface.blit(line, (x2 , y2 -200)) #change name
+         self.returning = surface.blit(line2, (x2 - 395, y2 +350))
+
+         pos = pygame.mouse.get_pos()
+         for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN and self.stage == Game.INSTRUCTIONS:
+             
+                 if self.returning.collidepoint(pos):
+                    self.stage = Game.SPLASH
+                    self.level = Level(levels[self.current_level]) 
+                  
+                    
+    def display_credits(self, surface):
+
+         line = FONT_SM.render("Credits", 1, WHITE)
+         Line3 = FONT_SM.render("<INPUT INSTRUCTIONS>", 1, WHITE)
+
+         
+         line2 = FONT_SM.render("back", 1, WHITE)
+
+         x1 = WIDTH / 2 - line.get_width() / 2;
+         y1 = HEIGHT / 3 - line.get_height() / 2;
+
+         x2 = WIDTH / 2 - line.get_width() / 2;
+         y2 = y1 + line.get_height() + 16;
+
+         self.cred = surface.blit(line, (x2 , y2 -200)) #change name
+         self.returning = surface.blit(line2, (x2 - 395, y2 +350))
 
 
 
+         pos = pygame.mouse.get_pos()
+         for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN and self.stage == Game.CREDITS:
+             
+                 if self.returning.collidepoint(pos):
+                    self.stage = Game.SPLASH
+                    self.level = Level(levels[self.current_level]) 
+            
+    
         
 
 #primary_text --> possible clean up
@@ -742,33 +804,44 @@ class Game():
             if event.type == pygame.QUIT:
                 self.done = True
                 
+            # allows mouse usage in the splash menu
             elif event.type == pygame.MOUSEBUTTONDOWN and self.stage == Game.SPLASH:
 
                 if self.pg.collidepoint(self.pos) and self.stage == Game.SPLASH:
                     print("play game")
                     self.stage = Game.PLAYING
+                    
                 elif self.instruct.collidepoint(self.pos):
                     print("instructions")
+                    self.stage = Game.INSTRUCTIONS
+                    self.level = Level(intro[0])
+
                     #WORK ON INSTRUCTIONS SCREEN
                 elif self.cred.collidepoint(self.pos):
                     print("credits")
+                    self.stage = Game.CREDITS
+                    self.level = Level(intro[1])
+
 
 
 
             elif event.type == pygame.KEYDOWN:
-                #"or self.stage == Game.START" unecessary code?
-                if self.stage == Game.SPLASH and event.key == pygame.K_s: 
+                #"or self.stage == Game.START" unecessary code? 
+                if self.stage == Game.SPLASH and event.key == pygame.K_y:  #change key
                     self.stage = Game.PLAYING
                     play_music()
-# HERE
                 elif self.stage == Game.PLAYING:
-                     if event.key == JUMP:
+                     if event.key == JUMP or event.key == JUMP2:
                          self.hero.jump(self.level.blocks)
                      
+    #pause constraint
 
-                elif self.stage == Game.PAUSED:
-                    pass
+                if self.stage == Game.PLAYING and event.key == pygame.K_p:
+                    self.stage = Game.PAUSED
+                elif self.stage == Game.PAUSED and event.key == pygame.K_p:    #can we press P again to resume?
+                    self.stage = Game.PLAYING
 
+            
                 elif self.stage == Game.LEVEL_COMPLETED:
                     self.advance()
 
@@ -779,12 +852,13 @@ class Game():
         pressed = pygame.key.get_pressed()
         
         if self.stage == Game.PLAYING:
-            if pressed[LEFT]:
+            if pressed[LEFT] or pressed[LEFT2]:
                 self.hero.move_left()
                
-            elif pressed[RIGHT]:
+            elif pressed[RIGHT] or pressed[RIGHT2]:
                 self.hero.move_right()
-                
+
+           #FIX THE DUCKING COMMAND     
             elif pressed[DOWN]: 
                 self.hero.duck()
                 
@@ -837,14 +911,20 @@ class Game():
         self.window.blit(self.level.inactive_layer, [offset_x, offset_y])
         self.window.blit(self.level.active_layer, [offset_x, offset_y])
 
-        self.display_stats(self.window)
+        # self.display_stats(self.window)
 
         if self.stage == Game.SPLASH:
             self.display_splash(self.window)
+        elif self.stage == Game.PLAYING:
+            self.display_stats(self.window)
+        elif self.stage == Game.INSTRUCTIONS:
+            self.display_instructions(self.window)
+        elif self.stage == Game.CREDITS:
+            self.display_credits(self.window)
         elif self.stage == Game.START:
            pass #self.display_message(self.window, "Ready?!!!", "Press any key to start.")
         elif self.stage == Game.PAUSED:
-            pass
+            self.display_message(self.window, "PAUSED", "Press 'P' to Unpause.")
         elif self.stage == Game.LEVEL_COMPLETED:
             pass#self.display_message(self.window, "Level Complete", "Press any key to continue.")
         elif self.stage == Game.VICTORY:

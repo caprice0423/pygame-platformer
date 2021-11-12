@@ -1,0 +1,27 @@
+{
+    "name": "Credits",
+    "width": 32,
+    "height": 10,
+    "background-color": [130, 182, 255],
+    "background-img": "images/black.png",
+        "background-position": "top",
+        "background-repeat-x": 1,
+        "background-fill-y": 1,
+        "scenery-img": "images/black.png",
+        "scenery-position": "bottom",
+        "scenery-repeat-x": 1,
+        "scenery-fill-y": 1,
+        "music": "sounds/busy-street-noises-sound-effect.ogg",
+        "start": [0,0],
+        "gravity": 1.0,
+        "terminal-velocity": 32,
+        "blocks": [],
+        "bcar": [],
+        "monsters": [],
+          "pig": [],
+        "cow": [],
+        "oneups": [],
+        "hearts": [], 
+        "flag": []
+    }
+    
