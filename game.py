@@ -3,7 +3,7 @@
 import json
 import pygame
 import sys
-from pygame.constants import K_p
+from pygame.constants import K_LEFT, K_RIGHT, K_SPACE, K_p
 
 from pygame.mouse import get_pos
 
@@ -31,6 +31,7 @@ JUMP2 = pygame.K_w
 DOWN = pygame.K_DOWN
 
 # Levels
+level_Map = ["levels/world-1.json"]
 levels = ["levels/world-4.json"]
 intro =  ["levels/opening.json",
           "levels/credits.json"]
@@ -77,6 +78,9 @@ block_images = {"RD": load_image("assets/tiles/road2.png"),
                 "BN": load_image("assets/tiles/bench1.png"),
                 "GR": load_image("images/grass_48x48.png"),
                 "DR": load_image("assets/tiles/Dirt1.png"),
+                "LV1": load_image("assets/tiles/spot1 (1).png"),
+                "LV2": load_image("assets/tiles/spot2.png"),
+                "LV3": load_image("assets/tiles/spot3.png")
                 }
 
 pig_img = load_image("assets/items/piggy-1.png")
@@ -234,7 +238,7 @@ class Character(Entity):
             self.score += temp.value
             self.test = pygame.sprite.Group()
             self.test.add(temp)
-            # print(temp.value)
+            print(temp.image)
             # print(self.test)
 
     def process_enemies(self, enemies):
@@ -510,45 +514,48 @@ class Level():
         with open(file_path, 'r') as f:
             data = f.read()
 
-        map_data = json.loads(data)
+        self.map_data = json.loads(data)
 
-        self.width = map_data['width'] * GRID_SIZE
-        self.height = map_data['height'] * GRID_SIZE
+        self.width = self.map_data['width'] * GRID_SIZE
+        self.height = self.map_data['height'] * GRID_SIZE
 
-        self.start_x = map_data['start'][0] * GRID_SIZE
-        self.start_y = map_data['start'][1] * GRID_SIZE
+        self.setx = self.map_data['start'][0] * GRID_SIZE
+        self.sety = self.map_data['start'][1] * GRID_SIZE
+       
+        self.start_x =  self.getx
+        self.start_y =  self.gety
 
-        for item in map_data['blocks']:
+        for item in self.map_data['blocks']:
             x, y = item[0] * GRID_SIZE, item[1] * GRID_SIZE
             img = block_images[item[2]]
             self.starting_blocks.append(Block(x, y, img))
 
-        for item in map_data['bcar']:
+        for item in self.map_data['bcar']:
             x, y = item[0] * GRID_SIZE, item[1] * GRID_SIZE
             self.starting_enemies.append(BrownCar(x, y, bcar_images))
 
-        for item in map_data['monsters']:
+        for item in self.map_data['monsters']:
             x, y = item[0] * GRID_SIZE, item[1] * GRID_SIZE
             self.starting_enemies.append(Monster(x, y, monster_images))
 
 #Checks the json file and adds elements to map
-        for item in map_data['pig']:
+        for item in self.map_data['pig']:
             x, y = item[0] * GRID_SIZE, item[1] * GRID_SIZE
             self.starting_temp.append(Animals(x, y, pig_img))
             
-        for item in map_data['cow']:
+        for item in self.map_data['cow']:
             x, y = item[0] * GRID_SIZE, item[1] * GRID_SIZE
             self.starting_temp.append(Animals(x, y, cow_img)) 
 
-        for item in map_data['oneups']:
+        for item in self.map_data['oneups']:
             x, y = item[0] * GRID_SIZE, item[1] * GRID_SIZE
             self.starting_powerups.append(OneUp(x, y, oneup_img))
 
-        for item in map_data['hearts']:
+        for item in self.map_data['hearts']:
             x, y = item[0] * GRID_SIZE, item[1] * GRID_SIZE
             self.starting_powerups.append(Heart(x, y, heart_img))
 
-        for i, item in enumerate(map_data['flag']):
+        for i, item in enumerate(self.map_data['flag']):
             x, y = item[0] * GRID_SIZE, item[1] * GRID_SIZE
 
             if i == 0:
@@ -563,51 +570,51 @@ class Level():
         self.inactive_layer = pygame.Surface([self.width, self.height], pygame.SRCALPHA, 32)
         self.active_layer = pygame.Surface([self.width, self.height], pygame.SRCALPHA, 32)
 
-        if map_data['background-color'] != "":
-            self.background_layer.fill(map_data['background-color'])
+        if self.map_data['background-color'] != "":
+            self.background_layer.fill(self.map_data['background-color'])
 
-        if map_data['background-img'] != "":
-            background_img = pygame.image.load(map_data['background-img']).convert_alpha()
+        if self.map_data['background-img'] != "":
+            background_img = pygame.image.load(self.map_data['background-img']).convert_alpha()
 
-            if map_data['background-fill-y']:
+            if self.map_data['background-fill-y']:
                  h = background_img.get_height()
                  w = int(background_img.get_width() * HEIGHT / h)
                  background_img = pygame.transform.scale(background_img, (w, HEIGHT))
 
-            if "top" in map_data['background-position']:
+            if "top" in self.map_data['background-position']:
                 start_y = 0
-            elif "bottom" in map_data['background-position']:
+            elif "bottom" in self.map_data['background-position']:
                 start_y = self.height - background_img.get_height()
 
-            if map_data['background-repeat-x']:
+            if self.map_data['background-repeat-x']:
                 for x in range(0, self.width, background_img.get_width()):
                     self.background_layer.blit(background_img, [x, start_y])
             else:
                 self.background_layer.blit(background_img, [0, start_y])
 
-        if map_data['scenery-img'] != "":
-            scenery_img = pygame.image.load(map_data['scenery-img']).convert_alpha()
+        if self.map_data['scenery-img'] != "":
+            scenery_img = pygame.image.load(self.map_data['scenery-img']).convert_alpha()
 
-            if map_data['scenery-fill-y']:
+            if self.map_data['scenery-fill-y']:
                 h = scenery_img.get_height()
                 w = int(scenery_img.get_width() * HEIGHT / h)
                 scenery_img = pygame.transform.scale(scenery_img, (w, HEIGHT))
 
-            if "top" in map_data['scenery-position']:
+            if "top" in self.map_data['scenery-position']:
                 start_y = 0
-            elif "bottom" in map_data['scenery-position']:
+            elif "bottom" in self.map_data['scenery-position']:
                 start_y = self.height - scenery_img.get_height()
 
-            if map_data['scenery-repeat-x']:
+            if self.map_data['scenery-repeat-x']:
                 for x in range(0, self.width, scenery_img.get_width()):
                     self.scenery_layer.blit(scenery_img, [x, start_y])
             else:
                 self.scenery_layer.blit(scenery_img, [0, start_y])
 
-        pygame.mixer.music.load(map_data['music'])
+        pygame.mixer.music.load(self.map_data['music'])
 
-        self.gravity = map_data['gravity']
-        self.terminal_velocity = map_data['terminal-velocity']
+        self.gravity = self.map_data['gravity']
+        self.terminal_velocity = self.map_data['terminal-velocity']
 
         self.completed = False
 
@@ -645,6 +652,31 @@ class Level():
         for e in self.enemies:
             e.reset()
 
+    def returned(self):
+        # startx = self.self.map_data['start'][0] * GRID_SIZE
+        # starty = self.self.map_data['start'][1] * GRID_SIZE
+        # self.starting_pos = [self.self.map_data['start'][0], self.self.map_data['start'][1]]
+        # print(self.starting_pos)
+        self._x = None
+        self._y = None
+      
+    @property
+    def getx(self):
+        return self._x
+
+    @getx.setter
+    def setx(self, value):
+        self._x = value
+
+    @property
+    def gety(self):
+        return self._y
+
+    @gety.setter
+    def sety(self, value):
+        self._y = value
+        
+
 class Game():
     
     
@@ -660,6 +692,8 @@ class Game():
 
     INSTRUCTIONS = 7
     CREDITS = 8
+
+    LEVELMAP = 9
   
 
     def __init__(self):
@@ -799,7 +833,7 @@ class Game():
         # surface.blit(lives_text, (32, 64))
 
     def process_events(self):
-
+        Level_Select = {"Level1": "[320, 448]", "Level2": "[640, 448]", "Level3": "[960, 448]"}
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.done = True
@@ -809,7 +843,9 @@ class Game():
 
                 if self.pg.collidepoint(self.pos) and self.stage == Game.SPLASH:
                     print("play game")
-                    self.stage = Game.PLAYING
+                    self.stage = Game.LEVELMAP
+                    self.level = Level(level_Map[0])
+
                     
                 elif self.instruct.collidepoint(self.pos):
                     print("instructions")
@@ -849,6 +885,48 @@ class Game():
                     if event.key == pygame.K_r:
                         self.reset()
 
+
+                elif self.stage == Game.LEVELMAP:
+                    
+                    currentpos = [self.level.start_x, self.level.start_y]
+
+                    if str(currentpos) == Level_Select["Level1"]:
+                        if event.key == K_RIGHT:
+                                self.level.start_x = 10 * GRID_SIZE
+                                self.level.start_y = 7 * GRID_SIZE
+                                print("level2")
+                        
+                        elif event.key == K_SPACE:
+                            self.level = Level(levels[0])
+                            self.stage = Game.PLAYING
+                            # if self.level.completed == True:
+                            #     print("yup")
+                            
+                    elif str(currentpos) == Level_Select["Level2"]:
+                            if event.key == K_RIGHT:
+                                self.level.start_x = 15 * GRID_SIZE
+                                self.level.start_y = 7 * GRID_SIZE
+                                print("level3")
+
+                            elif event.key == K_LEFT:
+                                self.level.start_x = 5 * GRID_SIZE
+                                self.level.start_y = 7 * GRID_SIZE
+                                print("level1")
+
+                            elif event.key == K_SPACE:
+                                print("under construction")
+
+                    elif str(currentpos) == Level_Select["Level3"]:
+                        if event.key == K_LEFT:
+                                self.level.start_x = 10 * GRID_SIZE
+                                self.level.start_y = 7 * GRID_SIZE
+                                print("level2")
+                        
+                        elif event.key == K_SPACE:
+                            print("under construction")
+
+
+
         pressed = pygame.key.get_pressed()
         
         if self.stage == Game.PLAYING:
@@ -869,6 +947,10 @@ class Game():
         if self.stage == Game.PLAYING:
             self.hero.update(self.level)
             self.level.enemies.update(self.level, self.hero)
+
+        elif self.stage == Game.LEVELMAP or self.stage == Game.INSTRUCTIONS or self.stage == Game.CREDITS:
+            self.level.reset()
+            self.hero.respawn(self.level)
 
         if self.level.completed:
             if self.current_level < len(levels) - 1:
