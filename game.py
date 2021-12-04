@@ -4,6 +4,7 @@ import json
 import pygame
 import sys
 from pygame.constants import K_LEFT, K_RIGHT, K_SPACE, K_p
+from pygame.mixer import Sound, stop
 
 from pygame.mouse import get_pos
 
@@ -18,7 +19,7 @@ FPS = 60
 GRID_SIZE = 64
 
 # Options
-sound_on = False
+sound_on = True
 
 # Controls
 LEFT = pygame.K_LEFT
@@ -56,39 +57,46 @@ def load_image(file_path, width=GRID_SIZE, height=GRID_SIZE):
     return img
 
 def play_sound(sound, loops=0, maxtime=0, fade_ms=0):
-    if sound_on:
+    if sound_on == True:
         sound.play(loops, maxtime, fade_ms)
 
 def play_music():
-    if sound_on:
-        pygame.mixer.music.play(-1)
+    pygame.mixer.music.play(-1)
+   
+def stop_music():
+    pygame.mixer.music.stop()
 
 # Images
-hero_duck = load_image("assets/character/adventurer_duck.png")
-hero_walk1 = load_image("assets/character/walk1.png")
-hero_walk2 = load_image("assets/character/walk2.png")
-hero_jump = load_image("assets/character/jump1.png")
-hero_idle = load_image("assets/character/idle1.png")
-hero_images = {"run": [hero_walk1, hero_walk2],
+hero_duck = load_image("assets/character/testduck.png")
+hero_walk1 = load_image("assets/character/firstWalk.png")
+hero_walk2 = load_image("assets/character/SecondWalk.png")
+hero_jump = load_image("assets/character/jumptest2.png")
+hero_idle = load_image("assets/character/newIdle.png")
+hero_images = {"run": [hero_walk1, hero_idle, hero_walk2],
                "jump": hero_jump,
                "idle": hero_idle,
                "duck": hero_duck}
 
 block_images = {"RD": load_image("assets/tiles/road2.png"),
-                "BN": load_image("assets/tiles/bench1.png"),
-                "GR": load_image("images/grass_48x48.png"),
-                "DR": load_image("assets/tiles/Dirt1.png"),
+                "BN": pygame.transform.scale(load_image("assets/tiles/skew2.png"), (50,100)),
+                "GR": load_image("assets/tiles/dirt2.png"),
+                "DR": pygame.transform.scale(load_image("assets/tiles/Dirt1.png"), (100,200)),
                 "LV1": load_image("assets/tiles/spot1 (1).png"),
                 "LV2": load_image("assets/tiles/spot2.png"),
-                "LV3": load_image("assets/tiles/spot3.png")
+                "LV3": load_image("assets/tiles/spot3.png"),
+                "barn": pygame.transform.scale(load_image("assets/tiles/testbarn1.png"), (200, 135))
                 }
+
+
 
 pig_img = load_image("assets/items/piggy-1.png")
 cow_img = load_image("assets/items/cowr.png")
 heart_img = load_image("assets/items/bandaid.png")
 oneup_img = load_image("assets/items/first_aid.png")
-flag_img = load_image("assets/items/flag.png")
+flag_img = load_image("assets/items/tractor1.png")
 flagpole_img = load_image("assets/items/flagpole.png")
+
+#muted_img = load_image("assets/sounds/unmute.png")
 
 monster_img1 = load_image("assets/enemies/monster-1.png")
 monster_img2 = load_image("assets/enemies/monster-2.png")
@@ -144,7 +152,6 @@ class Character(Entity):
         self.images_run_left = [pygame.transform.flip(img, 1, 0) for img in self.images_run_right]
         self.image_jump_right = images['jump']
         self.image_jump_left = pygame.transform.flip(self.image_jump_right, 1, 0)
-
         self.image_duck_right = images['duck']
         self.image_duck_left = pygame.transform.flip(self.image_duck_right, 1, 0)
 
@@ -152,7 +159,9 @@ class Character(Entity):
         self.image_index = 0
         self.steps = 0
 
-        self.speed = 5
+        self.ducking = False
+
+        self.speed = 5 #ask alex how to slow down the sprites image change 
         self.jump_power = 20
 
         self.vx = 0
@@ -171,15 +180,19 @@ class Character(Entity):
     def move_left(self):
         self.vx = -self.speed
         self.facing_right = False
+        self.movingleft = True
+        self.ducking = False
 
     def move_right(self):
         self.vx = self.speed
         self.facing_right = True
+        self.ducking = False
 
     def stop(self):
         self.vx = 0
 
     def jump(self, blocks):
+        self.ducking = False
         self.rect.y += 1
 
         hit_list = pygame.sprite.spritecollide(self, blocks, False)
@@ -190,11 +203,13 @@ class Character(Entity):
 
         self.rect.y -= 1
 
-    #continue Maintenance 
+    #Make it smoother?
     def duck(self):
-        #self.vx = 0
-        self.vy = 0
+       self.ducking = True
 
+    # def attack(self, image):
+    #     attack_x = self.rect.x + 5
+    #     attack_y = self.rect.y + 5
 
     def check_world_boundaries(self, level):
         if self.rect.left < 0:
@@ -231,15 +246,15 @@ class Character(Entity):
 
     def inventory(self, temp):
         hit_list = pygame.sprite.spritecollide(self, temp, True)
-        # inv.append(temp)
 
+    
         for temp in hit_list:
              #change sound dependent on animal
             self.score += temp.value
             self.test = pygame.sprite.Group()
             self.test.add(temp)
             print(temp.image)
-            # print(self.test)
+            
 
     def process_enemies(self, enemies):
         hit_list = pygame.sprite.spritecollide(self, enemies, False)
@@ -276,11 +291,12 @@ class Character(Entity):
                 if self.steps == 0:
                     self.image_index = (self.image_index + 1) % len(self.running_images)
                     self.image = self.running_images[self.image_index]
-            # elif self.vy == 0:
-            #     if self.facing_right:
-            #         self.image = self.image_duck_right
-            #     else:
-            #         self.image = self.image_duck_left
+            #ask teacher about duck override
+            elif self.ducking == True:
+                if self.facing_right:
+                    self.image = self.image_duck_right
+                else:
+                    self.image = self.image_duck_left
             else:
                 if self.facing_right:
                     self.image = self.image_idle_right
@@ -410,6 +426,21 @@ class Enemy(Entity):
         self.image = self.current_images[0]
         self.steps = 0
 
+
+class Throw(Character):
+    def __init__(self, x, y, images, movement_speed, existing_time):
+        super().__init__(x, y, images, movement_speed, existing_time)
+        
+        existing_time = pygame.time.Clock
+
+        self.start_x = x
+        self.start_y = y
+        self.start_vx = -2
+        self.start_vy = 0
+
+        self.vx = self.start_vx
+        self.vy = self.start_vy
+
 class BrownCar(Enemy):
     def __init__(self, x, y, images):
         super().__init__(x, y, images)
@@ -490,6 +521,11 @@ class Flag(Entity):
     def __init__(self, x, y, image):
         super().__init__(x, y, image)
 
+
+class BasicSprite(Entity):
+    def __init__(self, x, y, image):
+        super().__init__(x, y, image)
+
 class Level():
 
     def __init__(self, file_path):
@@ -498,12 +534,15 @@ class Level():
         self.starting_temp = []
         self.starting_powerups = []
         self.starting_flag = []
+        self.starting_basic = []
         
         self.blocks = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group()
         self.temp = pygame.sprite.Group()
         self.powerups = pygame.sprite.Group()
         self.flag = pygame.sprite.Group()
+
+        #self.muted = pygame.sprite.Group()
 
         self.active_sprites = pygame.sprite.Group()
         self.inactive_sprites = pygame.sprite.Group()
@@ -518,12 +557,9 @@ class Level():
 
         self.width = self.map_data['width'] * GRID_SIZE
         self.height = self.map_data['height'] * GRID_SIZE
-
-        self.setx = self.map_data['start'][0] * GRID_SIZE
-        self.sety = self.map_data['start'][1] * GRID_SIZE
        
-        self.start_x =  self.getx
-        self.start_y =  self.gety
+        self.start_x =  self.map_data['start'][0] * GRID_SIZE
+        self.start_y =  self.map_data['start'][1] * GRID_SIZE
 
         for item in self.map_data['blocks']:
             x, y = item[0] * GRID_SIZE, item[1] * GRID_SIZE
@@ -537,6 +573,11 @@ class Level():
         for item in self.map_data['monsters']:
             x, y = item[0] * GRID_SIZE, item[1] * GRID_SIZE
             self.starting_enemies.append(Monster(x, y, monster_images))
+
+        # for item in self.map_data['basic']:
+        #     x, y = item[0] * GRID_SIZE, item[1] * GRID_SIZE
+        #     self.starting_enemies.append(BasicSprite(x, y, muted_img))
+
 
 #Checks the json file and adds elements to map
         for item in self.map_data['pig']:
@@ -623,6 +664,7 @@ class Level():
         self.temp.add(self.starting_temp)
         self.powerups.add(self.starting_powerups)
         self.flag.add(self.starting_flag)
+        # self.muted.add(self.starting_basic)
 
         self.active_sprites.add(self.temp, self.enemies, self.powerups)
         self.inactive_sprites.add(self.blocks, self.flag)
@@ -646,35 +688,13 @@ class Level():
         self.enemies.add(self.starting_enemies)
         self.temp.add(self.starting_temp)
         self.powerups.add(self.starting_powerups)
+      #  self.muted.add(self.starting_basic)
 
         self.active_sprites.add(self.temp, self.enemies, self.powerups)
 
         for e in self.enemies:
             e.reset()
 
-    def returned(self):
-        # startx = self.self.map_data['start'][0] * GRID_SIZE
-        # starty = self.self.map_data['start'][1] * GRID_SIZE
-        # self.starting_pos = [self.self.map_data['start'][0], self.self.map_data['start'][1]]
-        # print(self.starting_pos)
-        self._x = None
-        self._y = None
-      
-    @property
-    def getx(self):
-        return self._x
-
-    @getx.setter
-    def setx(self, value):
-        self._x = value
-
-    @property
-    def gety(self):
-        return self._y
-
-    @gety.setter
-    def sety(self, value):
-        self._y = value
         
 
 class Game():
@@ -694,6 +714,9 @@ class Game():
     CREDITS = 8
 
     LEVELMAP = 9
+
+    # MUTED = 10
+    # UNMUTED = 11
   
 
     def __init__(self):
@@ -754,10 +777,21 @@ class Game():
     def display_instructions(self, surface):
 
          line = FONT_SM.render("Instructions", 1, WHITE)
-         Line3 = FONT_SM.render("<INPUT INSTRUCTIONS>", 1, WHITE)
+        #  Line3 = FONT_SM.render("<INPUT INSTRUCTIONS>", 1, WHITE)
 
          
          line2 = FONT_SM.render("back", 1, WHITE)
+         line3 = FONT_SM.render("CONTROLS:", 1, WHITE)
+         line4 = FONT_SM.render("Character Move Left: Left arrow Key or Key “A”:", 1, WHITE)
+         line5 = FONT_SM.render("Character Jump: Up arrow Key or Key “W”:", 1, WHITE)
+         line6 = FONT_SM.render("Character Duck: Down arrow Key or Key “S”:", 1, WHITE)
+         line7 = FONT_SM.render("Throw Tomatoes:  Space Bar:", 1, WHITE)
+         line8 = FONT_SM.render("Pause the Game: Key “P”:", 1, WHITE)
+         line9 = FONT_SM.render("Mute the Game: Key “M”:", 1, WHITE)
+         line10 = FONT_SM.render("Character Move Right: Right arrow Key or Key “D”", 1, WHITE)
+         
+       
+
 
          x1 = WIDTH / 2 - line.get_width() / 2;
          y1 = HEIGHT / 3 - line.get_height() / 2;
@@ -767,6 +801,18 @@ class Game():
 
          self.instruct = surface.blit(line, (x2 , y2 -200)) #change name
          self.returning = surface.blit(line2, (x2 - 395, y2 +350))
+         self.text1 = surface.blit(line3, (x2 - 300, y2 - 100))
+
+   
+         self.text2 = surface.blit(line4, (x2 - 300, y2 - 50))
+         self.text3 = surface.blit(line5, (x2 - 300, y2 - 0))
+         self.text4 = surface.blit(line6, (x2 - 300, y2 + 50))
+         self.text5 = surface.blit(line7, (x2 - 300, y2 + 100))
+         self.text6 = surface.blit(line8, (x2 - 300, y2 + 150))
+         self.text7 = surface.blit(line9, (x2 - 300, y2 + 200))
+         self.text1 = surface.blit(line10, (x2 - 300, y2 + 250))
+
+
 
          pos = pygame.mouse.get_pos()
          for event in pygame.event.get():
@@ -825,14 +871,36 @@ class Game():
 
     def display_stats(self, surface):
         hearts_text = FONT_SM.render("Hearts: " + str(self.hero.hearts), 1, WHITE)
-        # lives_text = FONT_SM.render("Lives: " + str(self.hero.lives), 1, WHITE)
         inventory_text = FONT_SM.render("Animals: " + str(self.hero.score), 1, WHITE)
+        #work on mute
+        # mute_button =  FONT_SM.render("mute", 1, WHITE)
+        # unmute_button =  FONT_SM.render("unmute", 1, WHITE)
 
         surface.blit(inventory_text, (WIDTH - inventory_text.get_width() - 32, 32))
         surface.blit(hearts_text, (32, 32))
-        # surface.blit(lives_text, (32, 64))
+
+
+
+
+
+
+        # self.mute = surface.blit(mute_button, (32, 64))
+        # self.unmute = surface.blit(unmute_button, (32, 64))
+
+        # pos = pygame.mouse.get_pos()
+        # for event in pygame.event.get():
+        #     if event.type == pygame.MOUSEBUTTONDOWN :
+        #         if self.mute.collidepoint(pos):
+        #             surface.blit(unmute_button, (32, 64))
+        #             self.sound_on = False
+                
+
+
+
+
 
     def process_events(self):
+        mut = True
         Level_Select = {"Level1": "[320, 448]", "Level2": "[640, 448]", "Level3": "[960, 448]"}
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -858,24 +926,34 @@ class Game():
                     self.stage = Game.CREDITS
                     self.level = Level(intro[1])
 
-
-
-
             elif event.type == pygame.KEYDOWN:
                 #"or self.stage == Game.START" unecessary code? 
                 if self.stage == Game.SPLASH and event.key == pygame.K_y:  #change key
                     self.stage = Game.PLAYING
-                    play_music()
+                   
                 elif self.stage == Game.PLAYING:
                      if event.key == JUMP or event.key == JUMP2:
                          self.hero.jump(self.level.blocks)
                      
-    #pause constraint
-
+                #pause constraint
                 if self.stage == Game.PLAYING and event.key == pygame.K_p:
                     self.stage = Game.PAUSED
                 elif self.stage == Game.PAUSED and event.key == pygame.K_p:    #can we press P again to resume?
                     self.stage = Game.PLAYING
+
+                #muted constraint
+                if self.stage == Game.PLAYING and event.key == pygame.K_m:
+                    stop_music()
+                    print("muting")
+                    # mut = False
+                   
+                elif self.stage == Game.PLAYING and event.key == pygame.K_u:    #can we press P again to resume
+                    # mut = True
+                    play_music()
+                    print("unmuting")
+                   
+
+                    
 
             
                 elif self.stage == Game.LEVEL_COMPLETED:
@@ -892,15 +970,23 @@ class Game():
 
                     if str(currentpos) == Level_Select["Level1"]:
                         if event.key == K_RIGHT:
+                                
                                 self.level.start_x = 10 * GRID_SIZE
                                 self.level.start_y = 7 * GRID_SIZE
                                 print("level2")
+                                
                         
                         elif event.key == K_SPACE:
                             self.level = Level(levels[0])
+                            self.level.start_x = 14 * GRID_SIZE
+                            self.level.start_y = 8 * GRID_SIZE
                             self.stage = Game.PLAYING
-                            # if self.level.completed == True:
-                            #     print("yup")
+                            self.level.reset()
+                            self.hero.respawn(self.level)
+                            
+                            # sound_on = False
+                            play_music() 
+                            # print(sound_on)
                             
                     elif str(currentpos) == Level_Select["Level2"]:
                             if event.key == K_RIGHT:
@@ -930,6 +1016,7 @@ class Game():
         pressed = pygame.key.get_pressed()
         
         if self.stage == Game.PLAYING:
+            
             if pressed[LEFT] or pressed[LEFT2]:
                 self.hero.move_left()
                
@@ -939,6 +1026,10 @@ class Game():
            #FIX THE DUCKING COMMAND     
             elif pressed[DOWN]: 
                 self.hero.duck()
+            
+            # elif pressed[JUMP] or pressed[JUMP2]:
+            #     if self.stage == Game.PLAYING:
+            #         self.hero.jump(self.level.blocks)
                 
             else:
                 self.hero.stop()
@@ -1007,6 +1098,11 @@ class Game():
            pass #self.display_message(self.window, "Ready?!!!", "Press any key to start.")
         elif self.stage == Game.PAUSED:
             self.display_message(self.window, "PAUSED", "Press 'P' to Unpause.")
+            #CONSTRUCTION
+        # elif self.stage == Game.UNMUTED:
+        #     self.sound_on = True
+        # elif self.stage == Game.MUTED:
+        #     self.sound_on = False
         elif self.stage == Game.LEVEL_COMPLETED:
             pass#self.display_message(self.window, "Level Complete", "Press any key to continue.")
         elif self.stage == Game.VICTORY:
@@ -1015,6 +1111,7 @@ class Game():
             self.display_message(self.window, "Game Over", "Press 'R' to restart.")
 
         pygame.display.flip()
+
 
     def loop(self):
         while not self.done:
