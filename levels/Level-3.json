@@ -1,0 +1,36 @@
+{
+	"name": "Level 3",
+	"width": 15,
+	"height": 10,
+	"background-color": [130, 182, 255],
+	"background-img": "assets/backgrounds/blue_sky.png",
+	"background-position": "top",
+	"background-repeat-x": 1,
+	"background-fill-y": 1,
+	"scenery-img": "",
+	"scenery-position": "bottom",
+	"scenery-repeat-x": 1,
+	"scenery-fill-y": 1,
+	"music": "sounds/cup-of-tea.ogg",
+	"start": [3, 8],
+	"gravity": 1.0,
+	"terminal-velocity": 32,
+	"blocks": [
+						 [0, 9, "Grass"], [1, 9, "Grass"], [2, 9, "Grass"], [3, 9, "Grass"], [4, 9, "Grass"],
+						 [5, 9, "Grass"], [6, 9, "Grass"], [7, 9, "Grass"], [8, 9, "Grass"], [9, 9, "Grass"],
+						 [10, 9, "Grass"], [11, 9, "Grass"], [12, 9, "Grass"], [13, 9, "Grass"], [14, 9, "Grass"],
+						 [15, 9, "Grass"], [16, 9, "Grass"], [17, 9, "Grass"], [18, 9, "Grass"], [19, 9, "Grass"],
+						 [20, 9, "Grass"]],
+	
+
+	"wolf": [],
+	"intangible_blocks": [],
+	"object": [],
+	"obstacles": [],
+  	"pig": [],
+	"rooster": [],
+	"cow": [[8,8]],
+	"oneups": [],
+	"hearts": [], 
+	"flag": [[13,8]]
+}

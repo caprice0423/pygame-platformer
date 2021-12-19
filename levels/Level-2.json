@@ -1,0 +1,64 @@
+{
+	"name": "Level 2",
+	"width": 31,
+	"height": 10,
+	"background-color": [130, 182, 255],
+	"background-img": "assets/backgrounds/blue_sky.png",
+	"background-position": "top",
+	"background-repeat-x": 1,
+	"background-fill-y": 1,
+	"scenery-img": "",
+	"scenery-position": "bottom",
+	"scenery-repeat-x": 1,
+	"scenery-fill-y": 1,
+	"music": "sounds/cup-of-tea.ogg",
+	"start": [1, 8],
+	"gravity": 1.0,
+	"terminal-velocity": 32,
+	"blocks": [
+						 [0, 9, "Grass"], [1, 9, "Grass"], [2, 9, "Grass"], [3, 9, "Grass"], [4, 9, "Grass"],
+						 [5, 9, "Grass"], [6, 9, "Grass"] , [9, 9, "Grass"],
+						 [10, 9, "Grass"],  [12, 9, "Grass"], [13, 9, "Grass"], [14, 9, "Grass"],
+						 [15, 9, "Grass"], [16, 9, "Grass"], [17, 9, "Grass"], [18, 9, "Grass"], [19, 9, "Grass"],
+						 [20, 9, "Grass"], [21, 9, "Grass"], [22, 9, "Grass"], [23, 9, "Grass"], [24, 9, "Grass"],
+					 	 [25, 9, "Grass"], [26, 9, "Grass"], [27, 9, "Grass"], [28, 9, "Grass"], [29, 9, "Grass"],
+						 [30, 9, "Grass"], [31, 9, "Grass"], [32, 9, "Grass"], [33, 9, "Grass"],[34, 9, "Grass"], 
+						 [35, 9, "Grass"],[36, 9, "Grass"], [37, 9, "Grass"],[38, 9, "Grass"], [39, 9, "Grass"],
+						 [40, 9, "Grass"], [41, 9, "Grass"],[42, 9, "Grass"], [43, 9, "Grass"],
+						 [44, 9, "Grass"], [45, 9, "Grass"],
+
+						 [15, 8, "fence"], [17.25, 8, "fence"], [19.50, 8, "fence"],
+
+						 [27,8.25, "rock"]
+						],
+						
+						 
+	
+	"wolf": [[25,8]],
+	"intangible_blocks": [[0,6.8, "corn field"],[0.25,7.4, "small corn field"], [0.5,6.8, "corn field"], [0.75,7.4, "small corn field"],
+	[1,6.8, "corn field"], [1.25,7.4, "small corn field"], [1.5,6.8, "corn field"], [1.75,7.4, "small corn field"], 
+	[2,6.8, "corn field"],[2.25,7.4, "small corn field"],[2.5,6.8, "corn field"],[2.75,7.4, "small corn field"], 
+	[3,6.8, "corn field"],[3.25,7.4, "small corn field"], [3.50,6.8, "corn field"],[3.75,7.4, "small corn field"], 
+	[4,6.8, "corn field"],[4.25,7.4, "small corn field"], [4.50,6.8, "corn field"],[4.75,7.4, "small corn field"], 
+	[5,6.8, "corn field"], [5.25,7.4, "small corn field"], [5.50,6.8, "corn field"],[5.75,7.4, "small corn field"], 
+	[6,6.8, "corn field"], 
+
+	[8.50,6.8, "corn field"], [8.75, 7.4, "small corn field"], [9,6.8, "corn field"], [9.25,7.4, "small corn field"], [9.5,6.8, "corn field"], [9.75,7.4, "small corn field"], 
+	[10,6.8, "corn field"],  [10.25, 7.4, "small corn field"],
+
+	[15,5.25,"stables"]
+
+
+
+
+
+
+	],
+	"obstacles": [],
+	"object": [],
+  	"pig": [],
+	"rooster": [[27,7.75]],
+	"cow": [],
+	"hearts": [[9,8.25]], 
+	"flag": [[30,8]]
+}
